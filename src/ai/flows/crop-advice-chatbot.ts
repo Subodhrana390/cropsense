@@ -63,10 +63,9 @@ const prompt = ai.definePrompt({
   tools: [getWeatherConditions],
   input: {schema: CropAdviceChatbotInputSchema},
   output: {schema: CropAdviceChatbotOutputSchema},
-  prompt: `You are a helpful AI chatbot assisting farmers with their agricultural questions.
-
-  Answer the following question to the best of your ability, using the available tools if necessary.
-  
+  system: `You are a helpful AI chatbot assisting farmers with their agricultural questions. Answer the user's question to the best of your ability.
+  If the user asks about what crops to grow, planting advice, or general farming practices, consider using the getWeatherConditions tool to provide more relevant and helpful information.`,
+  prompt: `
   {{#if language}}
   Please provide the answer in the following language: {{{language}}}.
   {{else}}
@@ -74,8 +73,6 @@ const prompt = ai.definePrompt({
   {{/if}}
 
   Question: {{{query}}}
-
-  If the user asks about what crops to grow, planting advice, or general farming practices, consider using the getWeatherConditions tool to provide more relevant and helpful information.
   `,
 });
 

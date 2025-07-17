@@ -1,20 +1,23 @@
 'use client';
 
-import { Chatbot, type ChatbotRef } from '@/components/chatbot';
+import { Chatbot } from '@/components/chatbot';
 import { CropIdentifier } from '@/components/crop-identifier';
 import { CropSuggestion } from '@/components/crop-suggestion';
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageUp, Lightbulb, MessageCircle } from 'lucide-react';
-import { useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const chatbotRef = useRef<ChatbotRef>(null);
+  const router = useRouter();
 
   const handleSuggestionClick = (crop: string) => {
-    chatbotRef.current?.submitQuery(
-      `Tell me more about growing ${crop}. What are the best practices for planting and harvesting it?`
-    );
+    const query = `Tell me more about growing ${crop}. What are the best practices for planting and harvesting it?`;
+    router.push(`/advice?q=${encodeURIComponent(query)}`);
+  };
+
+  const handleChatSubmit = (query: string) => {
+    router.push(`/advice?q=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -55,7 +58,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg rounded-xl flex flex-col h-full max-h-[70vh]">
+          <Card className="shadow-lg rounded-xl flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">
                 <MessageCircle className="h-6 w-6" />
@@ -63,7 +66,7 @@ export default function Home() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col">
-              <Chatbot ref={chatbotRef} />
+              <Chatbot onSubmit={handleChatSubmit} />
             </CardContent>
           </Card>
         </div>

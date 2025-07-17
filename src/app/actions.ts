@@ -1,9 +1,9 @@
-
 'use server';
 
 import {
   cropAdviceChatbot,
   type CropAdviceChatbotInput,
+  type CropAdviceChatbotOutput,
 } from '@/ai/flows/crop-advice-chatbot';
 import {
   suggestCrops,
@@ -51,14 +51,18 @@ const chatbotSchema = z.object({
   query: z.string().min(1, 'Query cannot be empty.'),
 });
 
-export async function getChatbotResponse(data: { query: string }) {
+export async function getChatbotResponse(data: { query: string }): Promise<{
+  success: boolean;
+  data?: CropAdviceChatbotOutput;
+  error?: string;
+}> {
   try {
     const validatedData = chatbotSchema.parse(data);
     const input: CropAdviceChatbotInput = {
       query: validatedData.query,
     };
     const result = await cropAdviceChatbot(input);
-    return { success: true, data: result.answer };
+    return { success: true, data: result };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {

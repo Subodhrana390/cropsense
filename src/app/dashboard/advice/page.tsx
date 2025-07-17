@@ -1,16 +1,16 @@
 'use client';
 
-import { getChatbotResponse } from '@/app/actions';
+import { getChatbotResponse, getSpeechFromText } from '@/app/actions';
 import { Header } from '@/components/layout/header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Bot, ChevronLeft, User } from 'lucide-react';
+import { Bot, ChevronLeft, User, Volume2, LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 
 function AdviceContent() {
   const searchParams = useSearchParams();
@@ -21,6 +21,11 @@ function AdviceContent() {
   const [loading, setLoading] = useState(true);
   const [answer, setAnswer] = useState('');
   const [error, setError] = useState('');
+  
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
 
   useEffect(() => {
     if (!query) {
@@ -32,6 +37,9 @@ function AdviceContent() {
     const fetchResponse = async () => {
       setLoading(true);
       setError('');
+      setAnswer('');
+      setAudioUrl(null);
+      
       const result = await getChatbotResponse({ query, language: language || 'English' });
       if (result.success && result.data) {
         setAnswer(result.data.answer);
@@ -52,6 +60,35 @@ function AdviceContent() {
 
     fetchResponse();
   }, [query, language, toast]);
+
+  const handlePlayAudio = async () => {
+    if (!answer) return;
+    
+    if (audioUrl && audioRef.current) {
+      audioRef.current.play();
+      return;
+    }
+
+    setIsGeneratingAudio(true);
+    const result = await getSpeechFromText(answer);
+    if(result.success && result.data) {
+        setAudioUrl(result.data.media);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Audio Error',
+            description: result.error || 'Failed to generate audio.',
+        });
+    }
+    setIsGeneratingAudio(false);
+  }
+
+  useEffect(() => {
+    if (audioUrl && audioRef.current) {
+        audioRef.current.play();
+    }
+  }, [audioUrl]);
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -82,10 +119,22 @@ function AdviceContent() {
 
             <Card className="shadow-lg rounded-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 font-headline text-xl">
-                  <Bot className="h-6 w-6 text-primary" />
-                  AI Farming Assistant's Advice
-                </CardTitle>
+                <div className="flex justify-between items-start">
+                    <CardTitle className="flex items-center gap-3 font-headline text-xl">
+                    <Bot className="h-6 w-6 text-primary" />
+                    AI Farming Assistant's Advice
+                    </CardTitle>
+                    {!loading && answer && (
+                         <Button onClick={handlePlayAudio} variant="ghost" size="icon" disabled={isGeneratingAudio}>
+                            {isGeneratingAudio ? (
+                                <LoaderCircle className="h-5 w-5 animate-spin" />
+                            ) : (
+                                <Volume2 className="h-5 w-5" />
+                            )}
+                            <span className="sr-only">Play Audio</span>
+                        </Button>
+                    )}
+                </div>
               </CardHeader>
               <CardContent>
                 {loading && (
@@ -104,9 +153,10 @@ function AdviceContent() {
                 {!loading && !error && answer && (
                   <div
                     className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: answer }}
+                    dangerouslySetInnerHTML={{ __html: answer.replace(/\n/g, '<br />') }}
                    />
                 )}
+                 {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" />}
               </CardContent>
             </Card>
           </div>

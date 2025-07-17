@@ -13,6 +13,11 @@ import {
   identifyCrop,
   type IdentifyCropInput,
 } from '@/ai/flows/identify-crop';
+import {
+  textToSpeech,
+  type TextToSpeechInput,
+  type TextToSpeechOutput,
+} from '@/ai/flows/text-to-speech';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -241,6 +246,30 @@ export async function getCropIdentification(data: { photoDataUri: string }) {
       success: false,
       error:
         'The AI assistant is currently unavailable. Please try again later.',
+    };
+  }
+}
+
+const ttsSchema = z.string().min(1, 'Text cannot be empty.');
+
+export async function getSpeechFromText(
+  text: string
+): Promise<{ success: boolean; data?: TextToSpeechOutput; error?: string }> {
+  try {
+    const validatedText = ttsSchema.parse(text);
+    const result = await textToSpeech(validatedText);
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.errors.map((e) => e.message).join(', '),
+      };
+    }
+    console.error('Error getting speech from text:', error);
+    return {
+      success: false,
+      error: 'The text-to-speech service is currently unavailable.',
     };
   }
 }

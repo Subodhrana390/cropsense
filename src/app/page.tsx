@@ -1,15 +1,16 @@
 import { Chatbot } from '@/components/chatbot';
+import { CropIdentifier } from '@/components/crop-identifier';
 import { CropSuggestion } from '@/components/crop-suggestion';
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lightbulb, MessageCircle } from 'lucide-react';
+import { ImageUp, Lightbulb, MessageCircle } from 'lucide-react';
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto p-4 md:p-8">
-        <div className="grid gap-8 lg:grid-cols-2 items-start">
+        <div className="grid gap-8 lg:grid-cols-3 items-start">
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">
@@ -24,6 +25,22 @@ export default function Home() {
               <CropSuggestion />
             </CardContent>
           </Card>
+          
+          <Card className="shadow-lg rounded-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">
+                <ImageUp className="h-6 w-6" />
+                Crop Identifier
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-6">
+                Upload an image of a crop, and our AI will identify it and provide an estimated market price.
+              </p>
+              <CropIdentifier />
+            </CardContent>
+          </Card>
+          
           <Card className="shadow-lg rounded-xl flex flex-col h-full max-h-[70vh]">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">

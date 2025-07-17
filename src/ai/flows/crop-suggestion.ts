@@ -28,7 +28,7 @@ export async function suggestCrops(input: CropSuggestionInput): Promise<CropSugg
 
 const prompt = ai.definePrompt({
   name: 'cropSuggestionPrompt',
-  model: 'googleai/gemini-2.5-flash-preview',
+  model: 'googleai/gemini-2.5-flash',
   input: {schema: CropSuggestionInputSchema},
   output: {schema: CropSuggestionOutputSchema},
   prompt: `Suggest suitable crops to grow in the following location and season:

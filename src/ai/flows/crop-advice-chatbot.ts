@@ -1,3 +1,4 @@
+
 // This file is machine-generated - edit with caution!
 'use server';
 
@@ -60,6 +61,7 @@ const getWeatherConditions = ai.defineTool(
 
 const prompt = ai.definePrompt({
   name: 'cropAdviceChatbotPrompt',
+  model: 'googleai/gemini-pro',
   tools: [getWeatherConditions],
   input: {schema: CropAdviceChatbotInputSchema},
   output: {schema: CropAdviceChatbotOutputSchema},

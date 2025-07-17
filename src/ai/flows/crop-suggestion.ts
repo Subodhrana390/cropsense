@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Seasonal crop suggestion flow.
@@ -27,6 +28,7 @@ export async function suggestCrops(input: CropSuggestionInput): Promise<CropSugg
 
 const prompt = ai.definePrompt({
   name: 'cropSuggestionPrompt',
+  model: 'googleai/gemini-pro',
   input: {schema: CropSuggestionInputSchema},
   output: {schema: CropSuggestionOutputSchema},
   prompt: `Suggest suitable crops to grow in the following location and season:

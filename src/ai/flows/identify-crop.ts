@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A crop identification and price estimation AI agent.
@@ -31,6 +32,7 @@ export async function identifyCrop(input: IdentifyCropInput): Promise<IdentifyCr
 
 const prompt = ai.definePrompt({
   name: 'identifyCropPrompt',
+  model: 'googleai/gemini-pro',
   input: {schema: IdentifyCropInputSchema},
   output: {schema: IdentifyCropOutputSchema},
   prompt: `You are an agricultural expert with specialization in Indian agriculture. Analyze the provided image to identify the crop.

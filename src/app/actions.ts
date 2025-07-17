@@ -17,10 +17,11 @@ import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { compare, hash } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { createUser, getUser, type User } from '@/lib/users';
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 const signupSchema = z
   .object({
@@ -89,9 +90,11 @@ export async function login(data: z.infer<typeof loginSchema>) {
       return { success: false, error: 'Invalid email or password.' };
     }
 
-    const token = sign({ userId: user.id, name: user.name }, JWT_SECRET, {
-      expiresIn: '1h',
-    });
+    const token = await new SignJWT({ userId: user.id, name: user.name })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('1h')
+      .sign(secretKey);
 
     cookies().set('token', token, {
       httpOnly: true,

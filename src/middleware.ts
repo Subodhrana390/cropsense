@@ -3,7 +3,7 @@
 import {NextResponse, type NextRequest} from 'next/server';
 import {verify} from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
@@ -25,6 +25,9 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
+    if (!JWT_SECRET) {
+      throw new Error('JWT_SECRET is not set in environment variables.');
+    }
     await verify(token, JWT_SECRET);
     return NextResponse.next();
   } catch (error) {

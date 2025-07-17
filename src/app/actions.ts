@@ -20,7 +20,7 @@ import { compare, hash } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { createUser, getUser, type User } from '@/lib/users';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const signupSchema = z
   .object({
@@ -74,6 +74,9 @@ const loginSchema = z.object({
 
 export async function login(data: z.infer<typeof loginSchema>) {
   try {
+    if (!JWT_SECRET) {
+      throw new Error('JWT_SECRET is not set in environment variables.');
+    }
     const validatedData = loginSchema.parse(data);
     const user = await getUser(validatedData.email);
 

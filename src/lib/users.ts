@@ -21,7 +21,7 @@ async function init() {
   }
   try {
     client = await clientPromise;
-    db = client.db();
+    db = client.db(); // Use the default database specified in the MONGODB_URI
     users = db.collection('users');
   } catch (error) {
     throw new Error('Failed to connect to the database.');
@@ -44,7 +44,7 @@ export async function getUser(email: string): Promise<User | null> {
     return { ...user, id: user._id.toString() };
   } catch (error) {
     console.error('Error getting user:', error);
-    return null;
+    throw new Error('Could not retrieve user.');
   }
 }
 
@@ -53,11 +53,11 @@ export async function createUser(
 ): Promise<User> {
   try {
     if (!users) await init();
-    const result = await users.insertOne({ ...user, _id: new ObjectId() });
+    const result = await users.insertOne(user);
     
     const newUser = await users.findOne({ _id: result.insertedId });
     if(!newUser) {
-      throw new Error("Failed to retrieve new user");
+      throw new Error("Failed to retrieve new user after creation.");
     }
 
     return { ...newUser, id: newUser._id.toString() };

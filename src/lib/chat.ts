@@ -12,6 +12,16 @@ export interface Message {
   timestamp: Date;
 }
 
+// Plain object version safe for client components
+export type SafeMessage = {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  text: string;
+  timestamp: Date;
+}
+
+
 let client: MongoClient;
 let db: Db;
 let messages: Collection<Omit<Message, 'id'>>;
@@ -33,10 +43,21 @@ async function init() {
   await init();
 })();
 
+function toSafeMessage(message: Omit<Message, 'id'>): SafeMessage {
+    const { _id, fromUserId, toUserId, ...rest } = message;
+    return {
+        id: _id.toString(),
+        fromUserId: fromUserId.toString(),
+        toUserId: toUserId.toString(),
+        ...rest
+    };
+}
+
+
 export async function getMessagesForUsers(
   userId1: string,
   userId2: string
-): Promise<Message[]> {
+): Promise<SafeMessage[]> {
   try {
     if (!messages) await init();
 
@@ -53,10 +74,7 @@ export async function getMessagesForUsers(
       .sort({ timestamp: 1 })
       .toArray();
 
-    return chatMessages.map((msg) => ({
-      ...msg,
-      id: msg._id.toString(),
-    }));
+    return chatMessages.map(toSafeMessage);
   } catch (error) {
     console.error('Error getting messages:', error);
     throw new Error('Could not retrieve messages.');
@@ -67,7 +85,7 @@ export async function createMessage(
   fromUserId: string,
   toUserId: string,
   text: string
-): Promise<Message> {
+): Promise<SafeMessage> {
   try {
     if (!messages) await init();
 
@@ -85,7 +103,7 @@ export async function createMessage(
       throw new Error('Failed to retrieve new message after creation.');
     }
 
-    return { ...newMessage, id: newMessage._id.toString() };
+    return toSafeMessage(newMessage);
   } catch (error) {
     console.error('Error creating message:', error);
     throw new Error('Could not create message.');

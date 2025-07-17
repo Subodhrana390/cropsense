@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getUsersList } from '@/app/actions';
-import type { User } from '@/lib/users';
+import type { SafeUser } from '@/lib/users';
 import { Header } from '@/components/layout/header';
 import {
   Card,
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 
 export default function ChatListPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<SafeUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

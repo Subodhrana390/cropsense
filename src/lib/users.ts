@@ -11,6 +11,9 @@ export interface User {
   password: string; // This will be a hashed password
 }
 
+// This is the "plain" version of the User object safe to pass to clients
+export type SafeUser = Omit<User, '_id' | 'password'>;
+
 let client: MongoClient;
 let db: Db;
 let users: Collection<Omit<User, 'id'>>;
@@ -31,6 +34,11 @@ async function init() {
 (async () => {
   await init();
 })();
+
+function toSafeUser(user: Omit<User, 'id'>): SafeUser {
+  const { _id, password, ...rest } = user;
+  return { id: _id.toString(), ...rest };
+}
 
 export async function getUser(email: string): Promise<User | null> {
   try {
@@ -67,7 +75,6 @@ export async function getUserById(userId: string): Promise<User | null> {
   }
 }
 
-
 export async function createUser(
   user: Omit<User, 'id' | '_id'>
 ): Promise<User> {
@@ -87,7 +94,7 @@ export async function createUser(
   }
 }
 
-export async function getAllUsers(excludeUserId: string): Promise<User[]> {
+export async function getAllUsers(excludeUserId: string): Promise<SafeUser[]> {
   try {
     if (!users) await init();
     const allUsers = await users
@@ -95,10 +102,7 @@ export async function getAllUsers(excludeUserId: string): Promise<User[]> {
       .project({ password: 0 }) // Exclude password hash
       .toArray();
 
-    return allUsers.map((user) => ({
-      ...user,
-      id: user._id.toString(),
-    })) as User[];
+    return allUsers.map(toSafeUser);
   } catch (error) {
     console.error('Error getting all users:', error);
     throw new Error('Could not retrieve users.');

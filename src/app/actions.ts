@@ -24,11 +24,12 @@ import {
   type User,
   getAllUsers,
   getUserById,
+  type SafeUser,
 } from '@/lib/users';
 import {
   createMessage,
   getMessagesForUsers,
-  type Message as DbMessage,
+  type SafeMessage,
 } from '@/lib/chat';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -246,7 +247,7 @@ export async function getCropIdentification(data: { photoDataUri: string }) {
 // Chat Actions
 export async function getUsersList(): Promise<{
   success: boolean;
-  data?: User[];
+  data?: SafeUser[];
   error?: string;
 }> {
   const currentUserId = await getUserIdFromToken();
@@ -267,7 +268,7 @@ export async function getUsersList(): Promise<{
 
 export async function getUserDetails(
   userId: string
-): Promise<{ success: boolean; data?: User; error?: string }> {
+): Promise<{ success: boolean; data?: SafeUser; error?: string }> {
   try {
     const user = await getUserById(userId);
     if (!user) {
@@ -275,17 +276,14 @@ export async function getUserDetails(
     }
     // We don't want to send the password hash to the client
     const { password, ...userWithoutPassword } = user;
-    return { success: true, data: userWithoutPassword as User };
+    return { success: true, data: userWithoutPassword as SafeUser };
   } catch (error) {
     console.error('Error getting user details:', error);
     return { success: false, error: 'Failed to retrieve user details.' };
   }
 }
 
-export interface Message {
-  id: string;
-  text: string;
-  timestamp: Date;
+export interface Message extends SafeMessage {
   fromSelf: boolean;
 }
 
@@ -299,9 +297,7 @@ export async function getMessages(
   try {
     const messages = await getMessagesForUsers(currentUserId, recipientId);
     const formattedMessages: Message[] = messages.map((msg) => ({
-      id: msg.id,
-      text: msg.text,
-      timestamp: msg.timestamp,
+      ...msg,
       fromSelf: msg.fromUserId.toString() === currentUserId,
     }));
     return { success: true, data: formattedMessages };
@@ -328,9 +324,7 @@ export async function sendMessage(
     return {
       success: true,
       data: {
-        id: newMessage.id,
-        text: newMessage.text,
-        timestamp: newMessage.timestamp,
+        ...newMessage,
         fromSelf: true,
       },
     };

@@ -7,7 +7,7 @@ import {
   getUserDetails,
   type Message,
 } from '@/app/actions';
-import type { User } from '@/lib/users';
+import type { SafeUser } from '@/lib/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 export function UserChat({ recipientId }: { recipientId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [recipient, setRecipient] = useState<User | null>(null);
+  const [recipient, setRecipient] = useState<SafeUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const { toast } = useToast();

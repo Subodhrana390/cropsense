@@ -4,8 +4,17 @@ import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageUp, Lightbulb, MessageCircle, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useTransition } from 'react';
+import { logout } from '@/app/actions';
 
 export default function DashboardPage() {
+  const [isPending, startTransition] = useTransition();
+
+  const handleSignOut = () => {
+    startTransition(async () => {
+      await logout();
+    });
+  };
   const features = [
     {
       title: 'Seasonal Crop Suggestion',

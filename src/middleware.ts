@@ -36,20 +36,23 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
   const isDashboardPage = pathname.startsWith('/dashboard');
+  const isHomePage = pathname === '/';
 
   const payload = token ? await verifyToken(token) : null;
-
-  if (isDashboardPage) {
-    if (!payload) {
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('token');
-      return response;
+  
+  // If user is logged in, redirect from auth pages or home page to dashboard
+  if (payload) {
+    if (isAuthPage || isHomePage) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
 
-  if (isAuthPage) {
-    if (payload) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+  // If user is not logged in, redirect from dashboard to login
+  if (!payload) {
+    if (isDashboardPage) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete('token');
+      return response;
     }
   }
 

@@ -6,17 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function ChatbotPage() {
-  const router = useRouter();
-
-  const handleChatSubmit = (query: string, language: string) => {
-    router.push(
-      `/dashboard/advice?q=${encodeURIComponent(query)}&lang=${encodeURIComponent(language)}`
-    );
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -36,7 +27,7 @@ export default function ChatbotPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col">
-              <Chatbot onSubmit={handleChatSubmit} />
+              <Chatbot />
             </CardContent>
           </Card>
         </div>

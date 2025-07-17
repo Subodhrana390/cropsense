@@ -49,9 +49,13 @@ export async function getSuggestions(data: {
 
 const chatbotSchema = z.object({
   query: z.string().min(1, 'Query cannot be empty.'),
+  language: z.string().optional(),
 });
 
-export async function getChatbotResponse(data: { query: string }): Promise<{
+export async function getChatbotResponse(data: {
+  query: string;
+  language?: string;
+}): Promise<{
   success: boolean;
   data?: CropAdviceChatbotOutput;
   error?: string;
@@ -60,6 +64,7 @@ export async function getChatbotResponse(data: { query: string }): Promise<{
     const validatedData = chatbotSchema.parse(data);
     const input: CropAdviceChatbotInput = {
       query: validatedData.query,
+      language: validatedData.language,
     };
     const result = await cropAdviceChatbot(input);
     return { success: true, data: result };

@@ -17,6 +17,7 @@ import {z} from 'genkit';
 
 const CropAdviceChatbotInputSchema = z.object({
   query: z.string().describe('The farmer\u0027s question about crop selection, planting, or storage.'),
+  language: z.string().optional().describe('The language for the response. Should be a language spoken in India.'),
 });
 export type CropAdviceChatbotInput = z.infer<typeof CropAdviceChatbotInputSchema>;
 
@@ -65,6 +66,12 @@ const prompt = ai.definePrompt({
   prompt: `You are a helpful AI chatbot assisting farmers with their agricultural questions.
 
   Answer the following question to the best of your ability, using the available tools if necessary.
+  
+  {{#if language}}
+  Please provide the answer in the following language: {{{language}}}.
+  {{else}}
+  Please provide the answer in English.
+  {{/if}}
 
   Question: {{{query}}}
 

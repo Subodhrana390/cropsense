@@ -15,6 +15,7 @@ import { Suspense, useEffect, useState } from 'react';
 function AdviceContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
+  const language = searchParams.get('lang');
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ function AdviceContent() {
     const fetchResponse = async () => {
       setLoading(true);
       setError('');
-      const result = await getChatbotResponse({ query });
+      const result = await getChatbotResponse({ query, language: language || 'English' });
       if (result.success && result.data) {
         setAnswer(result.data.answer);
       } else {
@@ -50,7 +51,7 @@ function AdviceContent() {
     };
 
     fetchResponse();
-  }, [query, toast]);
+  }, [query, language, toast]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

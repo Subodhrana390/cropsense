@@ -16,8 +16,10 @@ export default function Home() {
     router.push(`/advice?q=${encodeURIComponent(query)}`);
   };
 
-  const handleChatSubmit = (query: string) => {
-    router.push(`/advice?q=${encodeURIComponent(query)}`);
+  const handleChatSubmit = (query: string, language: string) => {
+    router.push(
+      `/advice?q=${encodeURIComponent(query)}&lang=${encodeURIComponent(language)}`
+    );
   };
 
   return (

@@ -48,6 +48,26 @@ export async function getUser(email: string): Promise<User | null> {
   }
 }
 
+export async function getUserById(userId: string): Promise<User | null> {
+  try {
+    if (!users) await init();
+    if (!ObjectId.isValid(userId)) {
+      return null;
+    }
+    const user = await users.findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return null;
+    }
+
+    return { ...user, id: user._id.toString() };
+  } catch (error) {
+    console.error('Error getting user by ID:', error);
+    throw new Error('Could not retrieve user.');
+  }
+}
+
+
 export async function createUser(
   user: Omit<User, 'id' | '_id'>
 ): Promise<User> {
@@ -64,5 +84,23 @@ export async function createUser(
   } catch (error) {
     console.error('Error creating user:', error);
     throw new Error('Could not create user.');
+  }
+}
+
+export async function getAllUsers(excludeUserId: string): Promise<User[]> {
+  try {
+    if (!users) await init();
+    const allUsers = await users
+      .find({ _id: { $ne: new ObjectId(excludeUserId) } })
+      .project({ password: 0 }) // Exclude password hash
+      .toArray();
+
+    return allUsers.map((user) => ({
+      ...user,
+      id: user._id.toString(),
+    })) as User[];
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    throw new Error('Could not retrieve users.');
   }
 }

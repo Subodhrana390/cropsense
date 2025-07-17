@@ -2,7 +2,7 @@
 
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ImageUp, Lightbulb, MessageCircle } from 'lucide-react';
+import { ImageUp, Lightbulb, MessageCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -25,6 +25,12 @@ export default function DashboardPage() {
       description: 'Ask anything about crop selection, planting schedules, pest control, or storage techniques.',
       href: '/dashboard/chatbot',
     },
+    {
+      title: 'Community Chat',
+      icon: Users,
+      description: 'Connect and chat with other users in the community.',
+      href: '/dashboard/chat',
+    },
   ];
 
   return (
@@ -40,7 +46,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
           {features.map((feature) => (
             <Link href={feature.href} key={feature.title} className="block group">
               <Card className="shadow-lg rounded-xl h-full transition-all duration-300 group-hover:shadow-2xl group-hover:-translate-y-1">

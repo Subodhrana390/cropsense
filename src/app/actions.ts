@@ -17,11 +17,36 @@ import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { compare, hash } from 'bcryptjs';
-import { SignJWT } from 'jose';
-import { createUser, getUser, type User } from '@/lib/users';
+import { jwtVerify, SignJWT } from 'jose';
+import {
+  createUser,
+  getUser,
+  type User,
+  getAllUsers,
+  getUserById,
+} from '@/lib/users';
+import {
+  createMessage,
+  getMessagesForUsers,
+  type Message as DbMessage,
+} from '@/lib/chat';
 
 const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is not set in environment variables.');
+}
 const secretKey = new TextEncoder().encode(JWT_SECRET);
+
+async function getUserIdFromToken() {
+  const token = cookies().get('token')?.value;
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secretKey);
+    return payload.userId as string;
+  } catch (error) {
+    return null;
+  }
+}
 
 const signupSchema = z
   .object({
@@ -75,9 +100,6 @@ const loginSchema = z.object({
 
 export async function login(data: z.infer<typeof loginSchema>) {
   try {
-    if (!JWT_SECRET) {
-      throw new Error('JWT_SECRET is not set in environment variables.');
-    }
     const validatedData = loginSchema.parse(data);
     const user = await getUser(validatedData.email);
 
@@ -102,7 +124,6 @@ export async function login(data: z.infer<typeof loginSchema>) {
       maxAge: 60 * 60, // 1 hour
       path: '/',
     });
-
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -116,7 +137,7 @@ export async function login(data: z.infer<typeof loginSchema>) {
       error: 'An unexpected error occurred. Please try again.',
     };
   }
-  
+
   redirect('/dashboard');
 }
 
@@ -124,7 +145,6 @@ export async function logout() {
   cookies().delete('token');
   redirect('/login');
 }
-
 
 const suggestionSchema = z.object({
   location: z.string().min(1, 'Location is required.'),
@@ -220,5 +240,102 @@ export async function getCropIdentification(data: { photoDataUri: string }) {
       error:
         'The AI assistant is currently unavailable. Please try again later.',
     };
+  }
+}
+
+// Chat Actions
+export async function getUsersList(): Promise<{
+  success: boolean;
+  data?: User[];
+  error?: string;
+}> {
+  const currentUserId = await getUserIdFromToken();
+  if (!currentUserId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const users = await getAllUsers(currentUserId);
+    return { success: true, data: users };
+  } catch (error) {
+    console.error('Error getting users list:', error);
+    return {
+      success: false,
+      error: 'Failed to retrieve user list.',
+    };
+  }
+}
+
+export async function getUserDetails(
+  userId: string
+): Promise<{ success: boolean; data?: User; error?: string }> {
+  try {
+    const user = await getUserById(userId);
+    if (!user) {
+      return { success: false, error: 'User not found.' };
+    }
+    // We don't want to send the password hash to the client
+    const { password, ...userWithoutPassword } = user;
+    return { success: true, data: userWithoutPassword as User };
+  } catch (error) {
+    console.error('Error getting user details:', error);
+    return { success: false, error: 'Failed to retrieve user details.' };
+  }
+}
+
+export interface Message {
+  id: string;
+  text: string;
+  timestamp: Date;
+  fromSelf: boolean;
+}
+
+export async function getMessages(
+  recipientId: string
+): Promise<{ success: boolean; data?: Message[]; error?: string }> {
+  const currentUserId = await getUserIdFromToken();
+  if (!currentUserId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const messages = await getMessagesForUsers(currentUserId, recipientId);
+    const formattedMessages: Message[] = messages.map((msg) => ({
+      id: msg.id,
+      text: msg.text,
+      timestamp: msg.timestamp,
+      fromSelf: msg.fromUserId.toString() === currentUserId,
+    }));
+    return { success: true, data: formattedMessages };
+  } catch (error) {
+    console.error('Error getting messages:', error);
+    return { success: false, error: 'Failed to retrieve messages.' };
+  }
+}
+
+export async function sendMessage(
+  recipientId: string,
+  text: string
+): Promise<{ success: boolean; data?: Message; error?: string }> {
+  const currentUserId = await getUserIdFromToken();
+  if (!currentUserId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  if (!text.trim()) {
+    return { success: false, error: 'Message cannot be empty.' };
+  }
+
+  try {
+    const newMessage = await createMessage(currentUserId, recipientId, text);
+    return {
+      success: true,
+      data: {
+        id: newMessage.id,
+        text: newMessage.text,
+        timestamp: newMessage.timestamp,
+        fromSelf: true,
+      },
+    };
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return { success: false, error: 'Failed to send message.' };
   }
 }

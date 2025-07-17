@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -16,6 +17,12 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -44,12 +51,14 @@ export function Chatbot() {
   const [loading, setLoading] = useState(false);
   const [conversation, setConversation] = useState<ChatMessage[]>([]);
   const [error, setError] = useState('');
+  const [isSecureContext, setIsSecureContext] = useState(false);
 
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
+    setIsSecureContext(window.isSecureContext);
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -74,7 +83,7 @@ export function Chatbot() {
         variant: 'destructive',
         title: 'Voice Recognition Error',
         description:
-          'Could not start voice recognition. Please check microphone permissions.',
+          'Could not start voice recognition. Please check microphone permissions and ensure you are on a secure (HTTPS) connection.',
       });
       setIsListening(false);
     };
@@ -95,6 +104,16 @@ export function Chatbot() {
   const handleMicClick = () => {
     const recognition = recognitionRef.current;
     if (!recognition) return;
+
+    if (!isSecureContext) {
+      toast({
+        variant: 'destructive',
+        title: 'Insecure Connection',
+        description:
+          'Microphone access is disabled on insecure connections. Please use HTTPS.',
+      });
+      return;
+    }
 
     const selectedLang = indianLanguages.find((l) => l.value === language);
     recognition.lang = selectedLang ? selectedLang.langCode : 'en-IN';
@@ -184,6 +203,21 @@ export function Chatbot() {
       audioRef.current.play();
     }
   }, [audioUrl]);
+  
+  const micButton = (
+    <Button
+      type="button"
+      size="icon"
+      onClick={handleMicClick}
+      className={cn(
+        isListening && 'bg-destructive hover:bg-destructive/90 animate-pulse'
+      )}
+      disabled={!isSecureContext}
+    >
+      <Mic className="h-4 w-4" />
+      <span className="sr-only">Use Microphone</span>
+    </Button>
+  );
 
   return (
     <div className="flex flex-col h-full justify-between">
@@ -288,17 +322,19 @@ export function Chatbot() {
               }
             }}
           />
-          <Button
-            type="button"
-            size="icon"
-            onClick={handleMicClick}
-            className={cn(
-              isListening && 'bg-destructive hover:bg-destructive/90 animate-pulse'
-            )}
-          >
-            <Mic className="h-4 w-4" />
-            <span className="sr-only">Use Microphone</span>
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>{micButton}</span>
+              </TooltipTrigger>
+              {!isSecureContext && (
+                <TooltipContent>
+                  <p>Microphone requires a secure (HTTPS) connection.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+
           <Button
             type="submit"
             size="icon"
@@ -314,3 +350,4 @@ export function Chatbot() {
     </div>
   );
 }
+

@@ -41,6 +41,12 @@ import { useState, useTransition, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { indianLanguages } from '@/lib/constants';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const formSchema = z.object({
   location: z.string().min(2, 'Location must be at least 2 characters.'),
@@ -65,10 +71,15 @@ export function CropSuggestion() {
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [language, setLanguage] = useState('English');
+  const [isSecureContext, setIsSecureContext] = useState(false);
 
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    setIsSecureContext(window.isSecureContext);
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -188,6 +199,23 @@ export function CropSuggestion() {
     }
   }, [audioUrl]);
 
+  const locationButton = (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      onClick={handleGetLocation}
+      disabled={isFetchingLocation || !isSecureContext}
+      aria-label="Get current location"
+    >
+      {isFetchingLocation ? (
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+      ) : (
+        <MapPin className="h-4 w-4" />
+      )}
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
       <Form {...form}>
@@ -203,20 +231,18 @@ export function CropSuggestion() {
                     <FormControl>
                       <Input placeholder="e.g., Punjab" {...field} />
                     </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={handleGetLocation}
-                      disabled={isFetchingLocation}
-                      aria-label="Get current location"
-                    >
-                      {isFetchingLocation ? (
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <MapPin className="h-4 w-4" />
-                      )}
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>{locationButton}</span>
+                        </TooltipTrigger>
+                        {!isSecureContext && (
+                          <TooltipContent>
+                            <p>Location access requires a secure (HTTPS) connection.</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <FormMessage />
                 </FormItem>

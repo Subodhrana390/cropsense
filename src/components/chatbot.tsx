@@ -107,10 +107,27 @@ export function Chatbot() {
     }
   };
 
+  const playAudio = async (text: string) => {
+    setIsGeneratingAudio(true);
+    setAudioUrl(null);
+    const result = await getSpeechFromText(text);
+    if (result.success && result.data) {
+      setAudioUrl(result.data.media);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Audio Error',
+        description: result.error || 'Failed to generate audio.',
+      });
+    }
+    setIsGeneratingAudio(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
 
+    const fromVoice = isListening;
     if (isListening) {
       recognitionRef.current?.stop();
     }
@@ -133,6 +150,10 @@ export function Chatbot() {
         content: result.data.answer,
       };
       setConversation((prev) => [...prev, assistantMessage]);
+      // If the input was from voice, automatically play the response
+      if (fromVoice) {
+        await playAudio(result.data.answer);
+      }
     } else {
       setError(
         result.error || 'An unexpected error occurred. Please try again later.'
@@ -147,27 +168,15 @@ export function Chatbot() {
     setLoading(false);
   };
 
-  const handlePlayAudio = async () => {
+  const handlePlayLastResponse = async () => {
     const lastMessage = conversation.findLast(m => m.role === 'assistant');
     if (!lastMessage) return;
 
     if (audioUrl && audioRef.current) {
-      audioRef.current.play();
-      return;
+        audioRef.current.play();
+        return;
     }
-
-    setIsGeneratingAudio(true);
-    const result = await getSpeechFromText(lastMessage.content);
-    if (result.success && result.data) {
-      setAudioUrl(result.data.media);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Audio Error',
-        description: result.error || 'Failed to generate audio.',
-      });
-    }
-    setIsGeneratingAudio(false);
+    await playAudio(lastMessage.content);
   };
 
   useEffect(() => {
@@ -232,7 +241,7 @@ export function Chatbot() {
       <div className="space-y-4">
         <div className="flex justify-end">
             {!loading && conversation.some(m => m.role === 'assistant') && (
-                <Button onClick={handlePlayAudio} variant="ghost" size="icon" disabled={isGeneratingAudio}>
+                <Button onClick={handlePlayLastResponse} variant="ghost" size="icon" disabled={isGeneratingAudio}>
                     {isGeneratingAudio ? (
                         <LoaderCircle className="h-5 w-5 animate-spin" />
                     ) : (
@@ -300,7 +309,7 @@ export function Chatbot() {
             <span className="sr-only">Send</span>
           </Button>
         </form>
-         {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" />}
+         {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" autoPlay />}
       </div>
     </div>
   );

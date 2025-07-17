@@ -1,7 +1,11 @@
 
 'use client';
 
-import { getChatbotResponse, getSuggestions } from '@/app/actions';
+import {
+  getChatbotResponse,
+  getSuggestions,
+  getLocationFromCoords,
+} from '@/app/actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,7 +34,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Bot, Sprout, Info } from 'lucide-react';
+import { Bot, Sprout, Info, MapPin, LoaderCircle } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -56,6 +60,7 @@ export function CropSuggestion() {
     null
   );
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -104,6 +109,44 @@ export function CropSuggestion() {
     setIsFetchingDetails(false);
   };
 
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        variant: 'destructive',
+        title: 'Geolocation Not Supported',
+        description: 'Your browser does not support geolocation.',
+      });
+      return;
+    }
+
+    setIsFetchingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const result = await getLocationFromCoords({ latitude, longitude });
+        if (result.success && result.data) {
+          form.setValue('location', result.data, { shouldValidate: true });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description:
+              result.error || 'Could not determine your location.',
+          });
+        }
+        setIsFetchingLocation(false);
+      },
+      (error) => {
+        toast({
+          variant: 'destructive',
+          title: 'Geolocation Error',
+          description: `Could not get your location: ${error.message}`,
+        });
+        setIsFetchingLocation(false);
+      }
+    );
+  };
+
   return (
     <div className="space-y-6">
       <Form {...form}>
@@ -115,9 +158,25 @@ export function CropSuggestion() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Punjab" {...field} />
-                  </FormControl>
+                  <div className="flex items-center gap-2">
+                    <FormControl>
+                      <Input placeholder="e.g., Punjab" {...field} />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleGetLocation}
+                      disabled={isFetchingLocation}
+                      aria-label="Get current location"
+                    >
+                      {isFetchingLocation ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

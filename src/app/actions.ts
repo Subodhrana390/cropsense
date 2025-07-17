@@ -14,10 +14,15 @@ import {
   type IdentifyCropInput,
 } from '@/ai/flows/identify-crop';
 import {
+  reverseGeocode,
+  type ReverseGeocodeInput,
+} from '@/ai/flows/reverse-geocode';
+import {
   textToSpeech,
   type TextToSpeechInput,
   type TextToSpeechOutput,
 } from '@/ai/flows/text-to-speech';
+import { toSafeUser } from '@/lib/utils';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -36,7 +41,6 @@ import {
   getMessagesForUsers,
   type SafeMessage,
 } from '@/lib/chat';
-import { toSafeUser } from '@/lib/utils';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -273,6 +277,38 @@ export async function getSpeechFromText(
     return {
       success: false,
       error: 'The text-to-speech service is currently unavailable.',
+    };
+  }
+}
+
+const reverseGeocodeSchema = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
+});
+
+export async function getLocationFromCoords(data: {
+  latitude: number;
+  longitude: number;
+}) {
+  try {
+    const validatedData = reverseGeocodeSchema.parse(data);
+    const input: ReverseGeocodeInput = {
+      latitude: validatedData.latitude,
+      longitude: validatedData.longitude,
+    };
+    const result = await reverseGeocode(input);
+    return { success: true, data: result.location };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.errors.map((e) => e.message).join(', '),
+      };
+    }
+    console.error('Error getting location from coordinates:', error);
+    return {
+      success: false,
+      error: 'Failed to determine location from coordinates.',
     };
   }
 }

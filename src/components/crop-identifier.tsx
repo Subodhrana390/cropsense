@@ -7,13 +7,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, ScanLine, Tag } from 'lucide-react';
+import { DollarSign, ScanLine, Tag, Leaf, Sun, Bug } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState, useTransition } from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 type IdentificationResult = {
   cropName: string;
   estimatedPrice: string;
+  description: string;
+  growingConditions: string;
+  commonPestsAndDiseases: string;
 };
 
 export function CropIdentifier() {
@@ -40,7 +49,7 @@ export function CropIdentifier() {
         const dataUrl = reader.result as string;
         setImagePreview(dataUrl);
         setImageData(dataUrl);
-        setResult(null); 
+        setResult(null);
       };
       reader.readAsDataURL(file);
     }
@@ -59,7 +68,7 @@ export function CropIdentifier() {
 
     startTransition(async () => {
       const response = await getCropIdentification({ photoDataUri: imageData });
-      if (response.success) {
+      if (response.success && response.data) {
         setResult(response.data);
       } else {
         toast({
@@ -108,12 +117,13 @@ export function CropIdentifier() {
       {isPending && (
         <div className="space-y-4 pt-4">
           <div className="flex items-center gap-4">
-            <Skeleton className="h-8 w-8 rounded-md" />
-            <Skeleton className="h-6 w-3/4 rounded-md" />
+            <Skeleton className="h-8 w-full rounded-md" />
           </div>
           <div className="flex items-center gap-4">
-            <Skeleton className="h-8 w-8 rounded-md" />
-            <Skeleton className="h-6 w-1/2 rounded-md" />
+            <Skeleton className="h-8 w-full rounded-md" />
+          </div>
+           <div className="flex items-center gap-4">
+            <Skeleton className="h-20 w-full rounded-md" />
           </div>
         </div>
       )}
@@ -122,19 +132,55 @@ export function CropIdentifier() {
         <div className="pt-4 space-y-4">
           <h3 className="font-headline text-lg">Analysis Result</h3>
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-            <Tag className="h-6 w-6 text-primary" />
+            <Tag className="h-6 w-6 text-primary flex-shrink-0" />
             <div>
               <p className="text-sm text-muted-foreground">Crop Name</p>
               <p className="font-semibold">{result.cropName}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-            <DollarSign className="h-6 w-6 text-primary" />
+            <DollarSign className="h-6 w-6 text-primary flex-shrink-0" />
             <div>
-              <p className="text-sm text-muted-foreground">Estimated Price (in INR)</p>
+              <p className="text-sm text-muted-foreground">Estimated Price</p>
               <p className="font-semibold">{result.estimatedPrice}</p>
             </div>
           </div>
+          
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="description">
+              <AccordionTrigger className="font-semibold">
+                <div className="flex items-center gap-3">
+                  <Leaf className="h-5 w-5 text-primary" />
+                  Description
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="prose prose-sm max-w-none text-muted-foreground">
+                {result.description}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="growing-conditions">
+              <AccordionTrigger className="font-semibold">
+                <div className="flex items-center gap-3">
+                 <Sun className="h-5 w-5 text-primary" />
+                  Growing Conditions
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="prose prose-sm max-w-none text-muted-foreground">
+                {result.growingConditions}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="pests-diseases">
+              <AccordionTrigger className="font-semibold">
+                <div className="flex items-center gap-3">
+                  <Bug className="h-5 w-5 text-primary" />
+                  Common Pests & Diseases
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="prose prose-sm max-w-none text-muted-foreground">
+                {result.commonPestsAndDiseases}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       )}
     </div>

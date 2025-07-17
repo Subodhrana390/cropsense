@@ -1,28 +1,68 @@
 'use server';
 
-// This is a mock user database. In a real application, you would use a proper database like PostgreSQL, MySQL, or a service like Firebase Authentication.
-// For this prototype, we'll store users in memory. This means users will be lost when the server restarts.
+import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
+import clientPromise from './mongodb';
 
 export interface User {
-  id: number;
+  _id: ObjectId;
+  id: string; // This will be the string representation of _id
   name: string;
   email: string;
   password: string; // This will be a hashed password
 }
 
-const users: User[] = [];
-let idCounter = 1;
+let client: MongoClient;
+let db: Db;
+let users: Collection<Omit<User, 'id'>>;
 
-export async function getUser(email: string): Promise<User | undefined> {
-  return users.find((user) => user.email === email);
+async function init() {
+  if (db) {
+    return;
+  }
+  try {
+    client = await clientPromise;
+    db = client.db();
+    users = db.collection('users');
+  } catch (error) {
+    throw new Error('Failed to connect to the database.');
+  }
 }
 
-export async function createUser(user: Omit<User, 'id'>): Promise<User> {
-  const newUser: User = {
-    ...user,
-    id: idCounter++,
-  };
-  users.push(newUser);
-  console.log('Current users:', users); // For debugging purposes
-  return newUser;
+(async () => {
+  await init();
+})();
+
+export async function getUser(email: string): Promise<User | null> {
+  try {
+    if (!users) await init();
+    const user = await users.findOne({ email });
+
+    if (!user) {
+      return null;
+    }
+
+    return { ...user, id: user._id.toString() };
+  } catch (error) {
+    console.error('Error getting user:', error);
+    return null;
+  }
+}
+
+export async function createUser(
+  user: Omit<User, 'id' | '_id'>
+): Promise<User> {
+  try {
+    if (!users) await init();
+    const result = await users.insertOne({ ...user, _id: new ObjectId() });
+    
+    const newUser = await users.findOne({ _id: result.insertedId });
+    if(!newUser) {
+      throw new Error("Failed to retrieve new user");
+    }
+
+    return { ...newUser, id: newUser._id.toString() };
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw new Error('Could not create user.');
+  }
 }

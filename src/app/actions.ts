@@ -44,7 +44,7 @@ export async function signup(data: z.infer<typeof signupSchema>) {
     }
 
     const hashedPassword = await hash(validatedData.password, 10);
-    const newUser: Omit<User, 'id'> = {
+    const newUser: Omit<User, 'id' | '_id'> = {
       name: validatedData.name,
       email: validatedData.email,
       password: hashedPassword,

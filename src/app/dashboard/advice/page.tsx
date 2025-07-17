@@ -59,9 +59,9 @@ function AdviceContent() {
       <main className="flex-grow container mx-auto p-4 md:p-8">
         <div className="max-w-3xl mx-auto">
           <Button asChild variant="outline" className="mb-6">
-            <Link href="/dashboard">
+            <Link href="/dashboard/chatbot">
               <ChevronLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
+              Ask Another Question
             </Link>
           </Button>
 
@@ -102,9 +102,10 @@ function AdviceContent() {
                   </Alert>
                 )}
                 {!loading && !error && answer && (
-                  <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
-                    {answer}
-                  </div>
+                  <div
+                    className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: answer }}
+                   />
                 )}
               </CardContent>
             </Card>

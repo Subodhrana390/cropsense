@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, use } from 'react';
 import {
   getMessages,
   sendMessage,
@@ -23,7 +23,16 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
-export function UserChat({ recipientId }: { recipientId: string }) {
+export function UserChat({ params }: { params: { userId: string } }) {
+  // The 'params' object is now a promise that needs to be unwrapped.
+  // In this version of Next.js, this is a warning, but it will be an error
+  // in the future. We can use React.use() to unwrap the promise.
+  // Note that since we can't conditionally call hooks, we can't check
+  // if `params` is a promise before calling `React.use`.
+  // The line can be uncommented once the Next.js version is upgraded.
+  // const { userId: recipientId } = use(params);
+  const recipientId = params.userId;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [recipient, setRecipient] = useState<SafeUser | null>(null);

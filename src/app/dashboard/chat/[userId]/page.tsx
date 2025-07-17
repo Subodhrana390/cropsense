@@ -18,7 +18,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
                 Back to User List
                 </Link>
             </Button>
-            <UserChat recipientId={params.userId} />
+            <UserChat params={params} />
          </div>
       </main>
       <footer className="text-center p-4 text-muted-foreground text-sm">

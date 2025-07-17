@@ -31,9 +31,8 @@ export function LandingPage() {
         { icon: Bot, text: 'Detailed information on any suggested crop' },
       ],
       image: {
-        src: 'https://placehold.co/600x400.png',
+        src: 'https://images.pexels.com/photos/2252584/pexels-photo-2252584.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         alt: 'Lush green field under a sunny sky',
-        "data-ai-hint": "farm field"
       },
     },
     {
@@ -47,9 +46,8 @@ export function LandingPage() {
         { icon: Bot, text: 'Pest and disease information' },
       ],
       image: {
-        src: 'https://placehold.co/600x400.png',
+        src: 'https://images.pexels.com/photos/4505168/pexels-photo-4505168.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         alt: 'Close-up of a hand holding a smartphone to identify a plant',
-        "data-ai-hint": "phone plant"
       },
     },
     {
@@ -63,9 +61,8 @@ export function LandingPage() {
         { icon: Bot, text: 'Text-to-speech for audible responses' },
       ],
       image: {
-        src: 'https://placehold.co/600x400.png',
+        src: 'https://images.pexels.com/photos/10834351/pexels-photo-10834351.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         alt: 'A farmer in a field using a tablet',
-        "data-ai-hint": "farmer tablet"
       },
     },
     {
@@ -79,9 +76,8 @@ export function LandingPage() {
         { icon: Bot, text: 'Build your farming network' },
       ],
       image: {
-        src: 'https://placehold.co/600x400.png',
+        src: 'https://images.pexels.com/photos/1595385/pexels-photo-1595385.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         alt: 'A diverse group of people talking in a community setting',
-        "data-ai-hint": "community talk"
       },
     },
   ];
@@ -163,7 +159,6 @@ export function LandingPage() {
                       width={600}
                       height={400}
                       className="rounded-xl shadow-2xl object-cover"
-                      data-ai-hint={feature.image['data-ai-hint']}
                     />
                   </div>
                 </div>

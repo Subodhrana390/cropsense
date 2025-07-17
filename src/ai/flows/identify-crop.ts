@@ -21,7 +21,7 @@ export type IdentifyCropInput = z.infer<typeof IdentifyCropInputSchema>;
 
 const IdentifyCropOutputSchema = z.object({
   cropName: z.string().describe('The common name of the identified crop.'),
-  estimatedPrice: z.string().describe('The estimated market price of the crop, including currency. e.g., "$5 per kg"'),
+  estimatedPrice: z.string().describe('The estimated market price of the crop in Indian Rupees (INR). e.g., "₹2000 per quintal"'),
 });
 export type IdentifyCropOutput = z.infer<typeof IdentifyCropOutputSchema>;
 
@@ -33,10 +33,10 @@ const prompt = ai.definePrompt({
   name: 'identifyCropPrompt',
   input: {schema: IdentifyCropInputSchema},
   output: {schema: IdentifyCropOutputSchema},
-  prompt: `You are an agricultural expert. Analyze the provided image to identify the crop.
-Based on the identified crop, provide an estimated market price.
+  prompt: `You are an agricultural expert with specialization in Indian agriculture. Analyze the provided image to identify the crop.
+Based on the identified crop, provide an estimated market price in Indian Rupees (INR).
 
-Return the common name of the crop and its estimated price.
+Return the common name of the crop and its estimated price in INR.
 
 Image: {{media url=photoDataUri}}`,
 });

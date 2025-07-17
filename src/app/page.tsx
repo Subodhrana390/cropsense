@@ -20,7 +20,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                Get recommendations for crops to grow based on your location and the current season. Our AI considers regional factors to suggest the most suitable options.
+                Get recommendations for crops to grow based on your location and the current season. Our AI considers regional factors to suggest the most suitable options for India.
               </p>
               <CropSuggestion />
             </CardContent>
@@ -35,7 +35,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                Upload an image of a crop, and our AI will identify it and provide an estimated market price.
+                Upload an image of a crop, and our AI will identify it and provide an estimated market price in India.
               </p>
               <CropIdentifier />
             </CardContent>

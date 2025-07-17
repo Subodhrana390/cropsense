@@ -131,7 +131,7 @@ export function CropIdentifier() {
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
             <DollarSign className="h-6 w-6 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Estimated Price</p>
+              <p className="text-sm text-muted-foreground">Estimated Price (in INR)</p>
               <p className="font-semibold">{result.estimatedPrice}</p>
             </div>
           </div>

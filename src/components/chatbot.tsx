@@ -27,22 +27,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-
-const indianLanguages = [
-  { value: 'English', label: 'English', langCode: 'en-IN' },
-  { value: 'Hindi', label: 'हिंदी (Hindi)', langCode: 'hi-IN' },
-  { value: 'Bengali', label: 'বাংলা (Bengali)', langCode: 'bn-IN' },
-  { value: 'Telugu', label: 'తెలుగు (Telugu)', langCode: 'te-IN' },
-  { value: 'Marathi', label: 'मराठी (Marathi)', langCode: 'mr-IN' },
-  { value: 'Tamil', label: 'தமிழ் (Tamil)', langCode: 'ta-IN' },
-  { value: 'Urdu', label: 'اردو (Urdu)', langCode: 'ur-IN' },
-  { value: 'Gujarati', label: 'ગુજરાતી (Gujarati)', langCode: 'gu-IN' },
-  { value: 'Kannada', label: 'ಕನ್ನಡ (Kannada)', langCode: 'kn-IN' },
-  { value: 'Odia', label: 'ଓଡ଼ିଆ (Odia)', langCode: 'or-IN' },
-  { value: 'Malayalam', label: 'മലയാളം (Malayalam)', langCode: 'ml-IN' },
-  { value: 'Punjabi', label: 'ਪੰਜਾਬੀ (Punjabi)', langCode: 'pa-IN' },
-  { value: 'Assamese', label: 'অসমীয়া (Assamese)', langCode: 'as-IN' },
-];
+import { indianLanguages } from '@/lib/constants';
 
 type ChatMessage = {
   role: 'user' | 'assistant';

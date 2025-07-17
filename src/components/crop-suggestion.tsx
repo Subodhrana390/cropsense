@@ -5,6 +5,7 @@ import {
   getChatbotResponse,
   getSuggestions,
   getLocationFromCoords,
+  getSpeechFromText,
 } from '@/app/actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -34,10 +36,11 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Bot, Sprout, Info, MapPin, LoaderCircle } from 'lucide-react';
-import { useState, useTransition } from 'react';
+import { Bot, Sprout, Info, MapPin, LoaderCircle, Volume2 } from 'lucide-react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { indianLanguages } from '@/lib/constants';
 
 const formSchema = z.object({
   location: z.string().min(2, 'Location must be at least 2 characters.'),
@@ -61,6 +64,11 @@ export function CropSuggestion() {
   );
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [language, setLanguage] = useState('English');
+
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,6 +81,7 @@ export function CropSuggestion() {
     setHasSearched(true);
     setSuggestions([]);
     setSelectedCropInfo(null);
+    setAudioUrl(null);
     startTransition(async () => {
       const result = await getSuggestions(values);
       if (result.success) {
@@ -90,9 +99,13 @@ export function CropSuggestion() {
   const handleSuggestionClick = async (crop: string) => {
     setIsFetchingDetails(true);
     setSelectedCropInfo(null);
+    setAudioUrl(null);
 
     const query = `Provide detailed information about growing ${crop} in India. Include its climatic benefits, best practices for planting, nurturing, soil preparation, and harvesting.`;
-    const result = await getChatbotResponse({ query });
+    const result = await getChatbotResponse({
+      query,
+      language: language || 'English',
+    });
 
     if (result.success && result.data) {
       setSelectedCropInfo({ crop, details: result.data.answer });
@@ -146,12 +159,40 @@ export function CropSuggestion() {
       }
     );
   };
+  
+  const handlePlayAudio = async () => {
+    if (!selectedCropInfo) return;
+
+    if (audioUrl && audioRef.current) {
+      audioRef.current.play();
+      return;
+    }
+
+    setIsGeneratingAudio(true);
+    const result = await getSpeechFromText(selectedCropInfo.details);
+    if (result.success && result.data) {
+      setAudioUrl(result.data.media);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Audio Error',
+        description: result.error || 'Failed to generate audio.',
+      });
+    }
+    setIsGeneratingAudio(false);
+  };
+
+  useEffect(() => {
+    if (audioUrl && audioRef.current) {
+      audioRef.current.play();
+    }
+  }, [audioUrl]);
 
   return (
     <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="location"
@@ -245,6 +286,21 @@ export function CropSuggestion() {
               </FormItem>
             )}
           />
+           <div className="space-y-2">
+            <Label htmlFor="language-select">Response Language</Label>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger id="language-select">
+                <SelectValue placeholder="Select a language" />
+              </SelectTrigger>
+              <SelectContent>
+                {indianLanguages.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             type="submit"
             disabled={isPending}
@@ -305,13 +361,25 @@ export function CropSuggestion() {
       {selectedCropInfo && (
         <Card className="mt-6 shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <Info className="h-6 w-6 text-primary" />
-              Information for {selectedCropInfo.crop}
-            </CardTitle>
-            <CardDescription>
-              Detailed information and growing advice from our AI assistant.
-            </CardDescription>
+            <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="flex items-center gap-3">
+                    <Info className="h-6 w-6 text-primary" />
+                    Information for {selectedCropInfo.crop}
+                  </CardTitle>
+                  <CardDescription>
+                    Detailed information and growing advice from our AI assistant.
+                  </CardDescription>
+                </div>
+                <Button onClick={handlePlayAudio} variant="ghost" size="icon" disabled={isGeneratingAudio}>
+                    {isGeneratingAudio ? (
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                    ) : (
+                        <Volume2 className="h-5 w-5" />
+                    )}
+                    <span className="sr-only">Play Crop Information</span>
+                </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div
@@ -323,6 +391,7 @@ export function CropSuggestion() {
           </CardContent>
         </Card>
       )}
+      {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" />}
     </div>
   );
 }

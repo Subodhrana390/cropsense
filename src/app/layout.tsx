@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-import { cookies } from 'next/headers';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -10,26 +9,10 @@ export const metadata: Metadata = {
   description: 'Connecting Fields to Families',
 };
 
-function AuthProvider({
-  authenticated,
-  unauthenticated,
-}: {
-  authenticated: React.ReactNode;
-  unauthenticated: React.ReactNode;
-}) {
-  const token = cookies().get('token')?.value;
-
-  // Since we use middleware, we can assume if a token exists, it's valid for this layout render.
-  // The middleware handles the actual verification and redirection.
-  return <>{token ? authenticated : unauthenticated}</>;
-}
-
 export default function RootLayout({
   children,
-  auth,
 }: Readonly<{
   children: React.ReactNode;
-  auth: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -42,9 +25,9 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
-        {/* We use a Suspense boundary to allow AuthProvider to use cookies() */}
+        {/* Suspense boundary for any children that might use server-side hooks */}
         <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
-           <AuthProvider authenticated={children} unauthenticated={auth} />
+           {children}
         </Suspense>
         <Toaster />
       </body>

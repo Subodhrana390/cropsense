@@ -1,11 +1,22 @@
-import { Chatbot } from '@/components/chatbot';
+'use client';
+
+import { Chatbot, type ChatbotRef } from '@/components/chatbot';
 import { CropIdentifier } from '@/components/crop-identifier';
 import { CropSuggestion } from '@/components/crop-suggestion';
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageUp, Lightbulb, MessageCircle } from 'lucide-react';
+import { useRef } from 'react';
 
 export default function Home() {
+  const chatbotRef = useRef<ChatbotRef>(null);
+
+  const handleSuggestionClick = (crop: string) => {
+    chatbotRef.current?.submitQuery(
+      `Tell me more about growing ${crop}. What are the best practices for planting and harvesting it?`
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -20,12 +31,14 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                Get recommendations for crops to grow based on your location and the current season. Our AI considers regional factors to suggest the most suitable options for India.
+                Get recommendations for crops to grow based on your location and
+                the current season. Our AI considers regional factors to suggest
+                the most suitable options for India.
               </p>
-              <CropSuggestion />
+              <CropSuggestion onSuggestionClick={handleSuggestionClick} />
             </CardContent>
           </Card>
-          
+
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">
@@ -35,12 +48,13 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                Upload an image of a crop, and our AI will identify it and provide an estimated market price in India.
+                Upload an image of a crop, and our AI will identify it and
+                provide an estimated market price in India.
               </p>
               <CropIdentifier />
             </CardContent>
           </Card>
-          
+
           <Card className="shadow-lg rounded-xl flex flex-col h-full max-h-[70vh]">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">
@@ -49,7 +63,7 @@ export default function Home() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col">
-              <Chatbot />
+              <Chatbot ref={chatbotRef} />
             </CardContent>
           </Card>
         </div>

@@ -33,7 +33,11 @@ const formSchema = z.object({
   season: z.string({ required_error: 'Please select a season.' }),
 });
 
-export function CropSuggestion() {
+type CropSuggestionProps = {
+  onSuggestionClick?: (crop: string) => void;
+};
+
+export function CropSuggestion({ onSuggestionClick }: CropSuggestionProps) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
   const [hasSearched, setHasSearched] = useState(false);
@@ -138,14 +142,20 @@ export function CropSuggestion() {
           ) : suggestions.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {suggestions.map((crop) => (
-                <Badge
+                <button
                   key={crop}
-                  variant="secondary"
-                  className="text-base px-4 py-2 bg-primary/10 text-primary border-primary/20"
+                  onClick={() => onSuggestionClick?.(crop)}
+                  disabled={!onSuggestionClick}
+                  className="disabled:cursor-not-allowed"
                 >
-                  <Sprout className="mr-2 h-4 w-4" />
-                  {crop}
-                </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="text-base px-4 py-2 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
+                  >
+                    <Sprout className="mr-2 h-4 w-4" />
+                    {crop}
+                  </Badge>
+                </button>
               ))}
             </div>
           ) : (

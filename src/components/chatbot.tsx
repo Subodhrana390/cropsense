@@ -8,12 +8,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Send } from 'lucide-react';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 
 type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string | React.ReactNode;
+};
+
+export type ChatbotRef = {
+  submitQuery: (query: string) => void;
 };
 
 const TypingIndicator = () => (
@@ -25,7 +36,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-export function Chatbot() {
+export const Chatbot = forwardRef<ChatbotRef, {}>((props, ref) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -38,14 +49,13 @@ export function Chatbot() {
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim() || isPending) return;
+  const handleQuerySubmit = (query: string) => {
+    if (!query.trim() || isPending) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: query,
     };
     const assistantMessageId = (Date.now() + 1).toString();
     setMessages((prev) => [
@@ -60,7 +70,7 @@ export function Chatbot() {
     setInput('');
 
     startTransition(async () => {
-      const result = await getChatbotResponse({ query: input });
+      const result = await getChatbotResponse({ query: query });
 
       if (result.success) {
         setMessages((prev) =>
@@ -76,9 +86,22 @@ export function Chatbot() {
           title: 'Error',
           description: result.error,
         });
-        setMessages((prev) => prev.filter((msg) => msg.id !== assistantMessageId));
+        setMessages((prev) =>
+          prev.filter((msg) => msg.id !== assistantMessageId)
+        );
       }
     });
+  };
+
+  useImperativeHandle(ref, () => ({
+    submitQuery: (query: string) => {
+      handleQuerySubmit(query);
+    },
+  }));
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleQuerySubmit(input);
   };
 
   useEffect(() => {
@@ -109,7 +132,10 @@ export function Chatbot() {
           ))}
         </div>
       </ScrollArea>
-      <form onSubmit={handleSubmit} className="flex w-full items-start space-x-2 pt-4">
+      <form
+        onSubmit={handleSubmit}
+        className="flex w-full items-start space-x-2 pt-4"
+      >
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -135,4 +161,5 @@ export function Chatbot() {
       </form>
     </div>
   );
-}
+});
+Chatbot.displayName = 'Chatbot';

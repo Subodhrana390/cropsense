@@ -10,16 +10,15 @@ export async function middleware(request: NextRequest) {
 
   const {pathname} = request.nextUrl;
 
-  // Allow access to auth pages, API routes, and static files
-  if (
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/signup') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/_next')
-  ) {
+  // Public pages that do not require authentication
+  const publicPaths = ['/login', '/signup'];
+
+  // If the path is public, let the request through
+  if (publicPaths.includes(pathname)) {
     return NextResponse.next();
   }
-
+  
+  // For all other paths, require a token
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
@@ -28,11 +27,13 @@ export async function middleware(request: NextRequest) {
     if (!JWT_SECRET) {
       throw new Error('JWT_SECRET is not set in environment variables.');
     }
-    await verify(token, JWT_SECRET);
+    // Verify the token
+    verify(token, JWT_SECRET);
+    // If token is valid, proceed
     return NextResponse.next();
   } catch (error) {
     console.error('JWT Verification Error:', error);
-    // Clear invalid cookie
+    // If token is invalid, redirect to login and clear the bad token
     const response = NextResponse.redirect(new URL('/login', request.url));
     response.cookies.delete('token');
     return response;

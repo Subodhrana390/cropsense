@@ -119,9 +119,6 @@ export function LandingPage() {
               <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-700">
                 <Link href="/signup">Get Started for Free</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/demo">See Demo</Link>
-              </Button>
             </div>
           </div>
         </section>

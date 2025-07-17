@@ -31,6 +31,7 @@ import * as z from 'zod';
 const formSchema = z.object({
   location: z.string().min(2, 'Location must be at least 2 characters.'),
   season: z.string({ required_error: 'Please select a season.' }),
+  soilType: z.string({ required_error: 'Please select a soil type.' }),
 });
 
 type CropSuggestionProps = {
@@ -71,7 +72,7 @@ export function CropSuggestion({ onSuggestionClick }: CropSuggestionProps) {
     <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="location"
@@ -117,6 +118,36 @@ export function CropSuggestion({ onSuggestionClick }: CropSuggestionProps) {
               )}
             />
           </div>
+           <FormField
+              control={form.control}
+              name="soilType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Soil Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a soil type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Alluvial Soil">Alluvial Soil</SelectItem>
+                      <SelectItem value="Black Soil">Black Soil</SelectItem>
+                      <SelectItem value="Red and Yellow Soil">Red and Yellow Soil</SelectItem>
+                      <SelectItem value="Laterite Soil">Laterite Soil</SelectItem>
+                      <SelectItem value="Arid Soil">Arid Soil</SelectItem>
+                      <SelectItem value="Saline Soil">Saline Soil</SelectItem>
+                      <SelectItem value="Peaty Soil">Peaty Soil</SelectItem>
+                      <SelectItem value="Forest Soil">Forest Soil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           <Button
             type="submit"
             disabled={isPending}

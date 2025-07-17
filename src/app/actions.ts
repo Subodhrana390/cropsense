@@ -156,17 +156,20 @@ export async function logout() {
 const suggestionSchema = z.object({
   location: z.string().min(1, 'Location is required.'),
   season: z.string().min(1, 'Season is required.'),
+  soilType: z.string().min(1, 'Soil type is required.'),
 });
 
 export async function getSuggestions(data: {
   location: string;
   season: string;
+  soilType: string;
 }) {
   try {
     const validatedData = suggestionSchema.parse(data);
     const input: CropSuggestionInput = {
       location: validatedData.location,
       season: validatedData.season,
+      soilType: validatedData.soilType,
     };
     const result = await suggestCrops(input);
     return { success: true, data: result.crops };

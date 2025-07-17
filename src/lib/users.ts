@@ -35,7 +35,7 @@ async function init() {
   await init();
 })();
 
-function toSafeUser(user: Omit<User, 'id'>): SafeUser {
+export function toSafeUser(user: User | Omit<User, 'id'>): SafeUser {
   const { _id, password, ...rest } = user;
   return { id: _id.toString(), ...rest };
 }

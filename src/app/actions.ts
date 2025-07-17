@@ -25,6 +25,7 @@ import {
   getAllUsers,
   getUserById,
   type SafeUser,
+  toSafeUser,
 } from '@/lib/users';
 import {
   createMessage,
@@ -274,9 +275,7 @@ export async function getUserDetails(
     if (!user) {
       return { success: false, error: 'User not found.' };
     }
-    // We don't want to send the password hash to the client
-    const { password, ...userWithoutPassword } = user;
-    return { success: true, data: userWithoutPassword as SafeUser };
+    return { success: true, data: toSafeUser(user) };
   } catch (error) {
     console.error('Error getting user details:', error);
     return { success: false, error: 'Failed to retrieve user details.' };

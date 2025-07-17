@@ -18,7 +18,6 @@ import Link from 'next/link';
 import { useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { login } from '../actions';
-import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
 
 const formSchema = z.object({
@@ -29,7 +28,6 @@ const formSchema = z.object({
 export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,14 +40,7 @@ export default function LoginPage() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       const result = await login(values);
-      if (result.success) {
-        toast({
-          title: 'Success',
-          description: 'Logged in successfully.',
-        });
-        router.refresh();
-        router.push('/dashboard');
-      } else {
+      if (result?.error) {
         toast({
           variant: 'destructive',
           title: 'Error',

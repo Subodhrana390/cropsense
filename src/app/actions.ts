@@ -97,7 +97,6 @@ export async function login(data: z.infer<typeof loginSchema>) {
       path: '/',
     });
 
-    return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -111,6 +110,8 @@ export async function login(data: z.infer<typeof loginSchema>) {
       error: 'An unexpected error occurred. Please try again.',
     };
   }
+  
+  redirect('/dashboard');
 }
 
 export async function logout() {

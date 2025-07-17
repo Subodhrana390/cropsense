@@ -61,7 +61,7 @@ const getWeatherConditions = ai.defineTool(
 
 const prompt = ai.definePrompt({
   name: 'cropAdviceChatbotPrompt',
-  model: 'googleai/gemini-pro',
+  model: 'googleai/gemini-2.5-flash-preview',
   tools: [getWeatherConditions],
   input: {schema: CropAdviceChatbotInputSchema},
   output: {schema: CropAdviceChatbotOutputSchema},

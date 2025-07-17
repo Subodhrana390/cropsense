@@ -23,7 +23,7 @@ export default function CropSuggestionPage() {
       <main className="flex-grow container mx-auto p-4 md:p-8">
         <div className="max-w-3xl mx-auto">
           <Button asChild variant="outline" className="mb-6">
-            <Link href="/">
+            <Link href="/dashboard">
               <ChevronLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Link>

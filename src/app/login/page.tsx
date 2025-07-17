@@ -47,7 +47,7 @@ export default function LoginPage() {
           title: 'Success',
           description: 'Logged in successfully.',
         });
-        router.push('/');
+        router.push('/dashboard');
         router.refresh();
       } else {
         toast({

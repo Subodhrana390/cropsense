@@ -2,6 +2,7 @@
 
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import clientPromise from './mongodb';
+import { toSafeUser } from './utils';
 
 export interface User {
   _id: ObjectId;
@@ -34,11 +35,6 @@ async function init() {
 (async () => {
   await init();
 })();
-
-export function toSafeUser(user: User | Omit<User, 'id'>): SafeUser {
-  const { _id, password, ...rest } = user;
-  return { id: _id.toString(), ...rest };
-}
 
 export async function getUser(email: string): Promise<User | null> {
   try {
@@ -102,7 +98,7 @@ export async function getAllUsers(excludeUserId: string): Promise<SafeUser[]> {
       .project({ password: 0 }) // Exclude password hash
       .toArray();
 
-    return allUsers.map(toSafeUser);
+    return allUsers.map((user) => toSafeUser(user));
   } catch (error) {
     console.error('Error getting all users:', error);
     throw new Error('Could not retrieve users.');

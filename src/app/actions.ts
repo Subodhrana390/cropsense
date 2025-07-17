@@ -25,13 +25,13 @@ import {
   getAllUsers,
   getUserById,
   type SafeUser,
-  toSafeUser,
 } from '@/lib/users';
 import {
   createMessage,
   getMessagesForUsers,
   type SafeMessage,
 } from '@/lib/chat';
+import { toSafeUser } from '@/lib/utils';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {

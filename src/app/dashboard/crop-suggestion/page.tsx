@@ -1,21 +1,19 @@
-
 'use client';
 
-import { Chatbot } from '@/components/chatbot';
+import { CropSuggestion } from '@/components/crop-suggestion';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function ChatbotPage() {
+export default function CropSuggestionPage() {
   const router = useRouter();
 
-  const handleChatSubmit = (query: string, language: string) => {
-    router.push(
-      `/advice?q=${encodeURIComponent(query)}&lang=${encodeURIComponent(language)}`
-    );
+  const handleSuggestionClick = (crop: string) => {
+    const query = `Tell me more about growing ${crop}. What are the best practices for planting and harvesting it?`;
+    router.push(`/dashboard/advice?q=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -29,15 +27,21 @@ export default function ChatbotPage() {
               Back to Dashboard
             </Link>
           </Button>
-          <Card className="shadow-lg rounded-xl flex flex-col h-full">
+
+          <Card className="shadow-lg rounded-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">
-                <MessageCircle className="h-6 w-6" />
-                AI Farming Assistant
+                <Lightbulb className="h-6 w-6" />
+                Seasonal Crop Suggestion
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-grow flex flex-col">
-              <Chatbot onSubmit={handleChatSubmit} />
+            <CardContent>
+              <p className="text-muted-foreground mb-6">
+                Get recommendations for crops to grow based on your location and
+                the current season. Our AI considers regional factors to suggest
+                the most suitable options for India.
+              </p>
+              <CropSuggestion onSuggestionClick={handleSuggestionClick} />
             </CardContent>
           </Card>
         </div>

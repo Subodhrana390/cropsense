@@ -11,19 +11,19 @@ export default function DashboardPage() {
       title: 'Seasonal Crop Suggestion',
       icon: Lightbulb,
       description: 'Get AI-powered recommendations for crops to grow based on your location and the season.',
-      href: '/crop-suggestion',
+      href: '/dashboard/crop-suggestion',
     },
     {
       title: 'Crop Identifier',
       icon: ImageUp,
       description: 'Upload an image of a crop to identify it and get an estimated market price in India.',
-      href: '/crop-identifier',
+      href: '/dashboard/crop-identifier',
     },
     {
       title: 'AI Farming Assistant',
       icon: MessageCircle,
       description: 'Ask anything about crop selection, planting schedules, pest control, or storage techniques.',
-      href: '/chatbot',
+      href: '/dashboard/chatbot',
     },
   ];
 

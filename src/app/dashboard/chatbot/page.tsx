@@ -1,14 +1,22 @@
-
 'use client';
 
-import { CropIdentifier } from '@/components/crop-identifier';
+import { Chatbot } from '@/components/chatbot';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ImageUp } from 'lucide-react';
+import { ChevronLeft, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-export default function CropIdentifierPage() {
+export default function ChatbotPage() {
+  const router = useRouter();
+
+  const handleChatSubmit = (query: string, language: string) => {
+    router.push(
+      `/dashboard/advice?q=${encodeURIComponent(query)}&lang=${encodeURIComponent(language)}`
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -20,20 +28,15 @@ export default function CropIdentifierPage() {
               Back to Dashboard
             </Link>
           </Button>
-
-          <Card className="shadow-lg rounded-xl">
+          <Card className="shadow-lg rounded-xl flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 font-headline text-2xl text-primary">
-                <ImageUp className="h-6 w-6" />
-                Crop Identifier
+                <MessageCircle className="h-6 w-6" />
+                AI Farming Assistant
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-6">
-                Upload an image of a crop, and our AI will identify it and
-                provide an estimated market price in India.
-              </p>
-              <CropIdentifier />
+            <CardContent className="flex-grow flex flex-col">
+              <Chatbot onSubmit={handleChatSubmit} />
             </CardContent>
           </Card>
         </div>

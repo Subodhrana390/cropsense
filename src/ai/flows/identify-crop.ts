@@ -47,7 +47,7 @@ export async function identifyCrop(
 
 const prompt = ai.definePrompt({
   name: 'identifyCropPrompt',
-  model: 'googleai/gemini-pro',
+  model: 'googleai/gemini-pro-vision',
   input: {schema: IdentifyCropInputSchema},
   output: {schema: IdentifyCropOutputSchema},
   prompt: `You are an agricultural expert with specialization in Indian agriculture. Analyze the provided image to identify the crop.

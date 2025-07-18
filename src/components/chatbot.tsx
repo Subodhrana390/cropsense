@@ -32,6 +32,7 @@ import {
   Send,
   User,
   Volume2,
+  Trash2
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { indianLanguages } from '@/lib/constants';
@@ -40,6 +41,8 @@ type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
 };
+
+const LOCAL_STORAGE_KEY = 'chatbotConversation';
 
 export function Chatbot() {
   const [input, setInput] = useState('');
@@ -57,8 +60,31 @@ export function Chatbot() {
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Load conversation from localStorage on initial render
   useEffect(() => {
     setIsSecureContext(window.isSecureContext);
+    try {
+      const storedConversation = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedConversation) {
+        setConversation(JSON.parse(storedConversation));
+      }
+    } catch (error) {
+        console.error("Failed to parse conversation from localStorage", error);
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
+  }, []);
+
+  // Save conversation to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(conversation));
+    } catch (error) {
+        console.error("Failed to save conversation to localStorage", error);
+    }
+  }, [conversation]);
+
+
+  useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -198,6 +224,14 @@ export function Chatbot() {
     await playAudio(lastMessage.content);
   };
 
+  const handleClearHistory = () => {
+    setConversation([]);
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    toast({
+        title: "Chat history cleared",
+    });
+  };
+
   useEffect(() => {
     if (audioUrl && audioRef.current) {
       audioRef.current.play();
@@ -273,25 +307,50 @@ export function Chatbot() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex justify-end">
-            {!loading && conversation.some(m => m.role === 'assistant') && (
-                <Button onClick={handlePlayLastResponse} variant="ghost" size="icon" disabled={isGeneratingAudio}>
-                    {isGeneratingAudio ? (
-                        <LoaderCircle className="h-5 w-5 animate-spin" />
-                    ) : (
-                        <Volume2 className="h-5 w-5" />
-                    )}
-                    <span className="sr-only">Play Last Response</span>
-                </Button>
-            )}
+        <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground">
+                Ask anything about farming.
+            </p>
+            <div className="flex items-center gap-2">
+                {!loading && conversation.length > 0 && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button onClick={handleClearHistory} variant="ghost" size="icon">
+                                    <Trash2 className="h-5 w-5" />
+                                    <span className="sr-only">Clear Chat History</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                Clear Chat History
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+                {!loading && conversation.some(m => m.role === 'assistant') && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button onClick={handlePlayLastResponse} variant="ghost" size="icon" disabled={isGeneratingAudio}>
+                                    {isGeneratingAudio ? (
+                                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <Volume2 className="h-5 w-5" />
+                                    )}
+                                    <span className="sr-only">Play Last Response</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                Play Last Response
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
         </div>
-        <p className="text-muted-foreground mb-4">
-          Ask anything about crop selection, planting schedules, pest control,
-          or storage techniques. You can also use the microphone to ask your
-          question.
-        </p>
+       
         <div className="space-y-2 mb-4">
-          <Label htmlFor="language-select">Language</Label>
+          <Label htmlFor="language-select">Response Language</Label>
           <Select value={language} onValueChange={setLanguage}>
             <SelectTrigger id="language-select">
               <SelectValue placeholder="Select a language" />

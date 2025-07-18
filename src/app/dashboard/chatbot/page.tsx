@@ -3,7 +3,7 @@
 import { Chatbot } from '@/components/chatbot';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,6 +25,9 @@ export default function ChatbotPage() {
                 <MessageCircle className="h-6 w-6" />
                 AI Farming Assistant
               </CardTitle>
+               <CardDescription>
+                Your personal AI-powered guide for all agricultural questions.
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col">
               <Chatbot />

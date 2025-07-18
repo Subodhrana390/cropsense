@@ -41,6 +41,12 @@ import {
   getMessagesForUsers,
   type SafeMessage,
 } from '@/lib/chat';
+import {
+  addChatMessage,
+  clearChatHistory,
+  getChatHistory,
+  type ChatMessage,
+} from '@/lib/chatbot-chat';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -240,6 +246,9 @@ export async function getCropIdentification(data: { photoDataUri: string }) {
       photoDataUri: validatedData.photoDataUri,
     };
     const result = await identifyCrop(input);
+    if (!result.cropName) {
+       return { success: false, error: 'Could not identify a crop in the image. Please try a different one.' };
+    }
     return { success: true, data: result };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -349,20 +358,20 @@ export async function getUserDetails(
   }
 }
 
-export interface Message extends SafeMessage {
+export interface UserMessage extends SafeMessage {
   fromSelf: boolean;
 }
 
 export async function getMessages(
   recipientId: string
-): Promise<{ success: boolean; data?: Message[]; error?: string }> {
+): Promise<{ success: boolean; data?: UserMessage[]; error?: string }> {
   const currentUserId = await getUserIdFromToken();
   if (!currentUserId) {
     return { success: false, error: 'Unauthorized' };
   }
   try {
     const messages = await getMessagesForUsers(currentUserId, recipientId);
-    const formattedMessages: Message[] = messages.map((msg) => ({
+    const formattedMessages: UserMessage[] = messages.map((msg) => ({
       ...msg,
       fromSelf: msg.fromUserId.toString() === currentUserId,
     }));
@@ -376,7 +385,7 @@ export async function getMessages(
 export async function sendMessage(
   recipientId: string,
   text: string
-): Promise<{ success: boolean; data?: Message; error?: string }> {
+): Promise<{ success: boolean; data?: UserMessage; error?: string }> {
   const currentUserId = await getUserIdFromToken();
   if (!currentUserId) {
     return { success: false, error: 'Unauthorized' };
@@ -397,5 +406,54 @@ export async function sendMessage(
   } catch (error) {
     console.error('Error sending message:', error);
     return { success: false, error: 'Failed to send message.' };
+  }
+}
+
+// AI Assistant Chat History Actions
+export async function getChatHistoryAction(): Promise<{
+  success: boolean;
+  data?: ChatMessage[];
+  error?: string;
+}> {
+  const userId = await getUserIdFromToken();
+  if (!userId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const history = await getChatHistory(userId);
+    return { success: true, data: history };
+  } catch (error) {
+    return { success: false, error: 'Failed to retrieve chat history.' };
+  }
+}
+
+export async function addChatMessageAction(
+  message: Omit<ChatMessage, 'userId' | 'timestamp' | 'id'>
+): Promise<{ success: boolean; error?: string }> {
+  const userId = await getUserIdFromToken();
+  if (!userId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    await addChatMessage({ ...message, userId });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Failed to save chat message.' };
+  }
+}
+
+export async function clearChatHistoryAction(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const userId = await getUserIdFromToken();
+  if (!userId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    await clearChatHistory(userId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Failed to clear chat history.' };
   }
 }

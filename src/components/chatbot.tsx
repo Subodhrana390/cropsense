@@ -4,6 +4,9 @@
 import {
   getChatbotResponse,
   getSpeechFromText,
+  getChatHistoryAction,
+  addChatMessageAction,
+  clearChatHistoryAction,
 } from '@/app/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -32,7 +35,7 @@ import {
   Send,
   User,
   Volume2,
-  Trash2
+  Trash2,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { indianLanguages } from '@/lib/constants';
@@ -42,8 +45,6 @@ type ChatMessage = {
   content: string;
 };
 
-const LOCAL_STORAGE_KEY = 'chatbotConversation';
-
 export function Chatbot() {
   const [input, setInput] = useState('');
   const [language, setLanguage] = useState('English');
@@ -51,7 +52,7 @@ export function Chatbot() {
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true to fetch history
   const [conversation, setConversation] = useState<ChatMessage[]>([]);
   const [error, setError] = useState('');
   const [isSecureContext, setIsSecureContext] = useState(false);
@@ -60,29 +61,24 @@ export function Chatbot() {
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Load conversation from localStorage on initial render
   useEffect(() => {
     setIsSecureContext(window.isSecureContext);
-    try {
-      const storedConversation = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedConversation) {
-        setConversation(JSON.parse(storedConversation));
+    const fetchHistory = async () => {
+      setLoading(true);
+      const result = await getChatHistoryAction();
+      if (result.success && result.data) {
+        setConversation(result.data.map(d => ({ role: d.role, content: d.content })));
+      } else if (result.error) {
+        toast({
+            variant: 'destructive',
+            title: 'Error loading history',
+            description: result.error
+        });
       }
-    } catch (error) {
-        console.error("Failed to parse conversation from localStorage", error);
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-    }
-  }, []);
-
-  // Save conversation to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(conversation));
-    } catch (error) {
-        console.error("Failed to save conversation to localStorage", error);
-    }
-  }, [conversation]);
-
+      setLoading(false);
+    };
+    fetchHistory();
+  }, [toast]);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -182,10 +178,15 @@ export function Chatbot() {
     setLoading(true);
     setError('');
     setAudioUrl(null);
+    
+    // Save user message to DB, but don't block UI
+    addChatMessageAction(userMessage).catch(err => console.error("Failed to save user message", err));
+    const currentInput = input;
     setInput('');
 
+
     const result = await getChatbotResponse({
-      query: input,
+      query: currentInput,
       language: language || 'English',
     });
 
@@ -195,7 +196,8 @@ export function Chatbot() {
         content: result.data.answer,
       };
       setConversation((prev) => [...prev, assistantMessage]);
-      // If the input was from voice, automatically play the response
+      addChatMessageAction(assistantMessage).catch(err => console.error("Failed to save assistant message", err));
+
       if (fromVoice) {
         await playAudio(result.data.answer);
       }
@@ -209,27 +211,37 @@ export function Chatbot() {
         description:
           result.error || 'Failed to get a response from the AI assistant.',
       });
+      // Remove the user message from UI if AI fails
+      setConversation(prev => prev.slice(0, -1));
     }
     setLoading(false);
   };
 
   const handlePlayLastResponse = async () => {
-    const lastMessage = conversation.findLast(m => m.role === 'assistant');
+    const lastMessage = conversation.findLast((m) => m.role === 'assistant');
     if (!lastMessage) return;
 
     if (audioUrl && audioRef.current) {
-        audioRef.current.play();
-        return;
+      audioRef.current.play();
+      return;
     }
     await playAudio(lastMessage.content);
   };
 
-  const handleClearHistory = () => {
+  const handleClearHistory = async () => {
     setConversation([]);
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    toast({
-        title: "Chat history cleared",
-    });
+    const result = await clearChatHistoryAction();
+     if (result.success) {
+      toast({
+        title: 'Chat history cleared',
+      });
+    } else {
+        toast({
+            variant: 'destructive',
+            title: "Error",
+            description: result.error
+        })
+    }
   };
 
   useEffect(() => {
@@ -237,7 +249,7 @@ export function Chatbot() {
       audioRef.current.play();
     }
   }, [audioUrl]);
-  
+
   const micButton = (
     <Button
       type="button"
@@ -270,9 +282,7 @@ export function Chatbot() {
             <div
               className={cn(
                 'p-4 rounded-lg max-w-lg',
-                msg.role === 'user'
-                  ? 'bg-muted'
-                  : 'bg-background border'
+                msg.role === 'user' ? 'bg-muted' : 'bg-background border'
               )}
             >
               <div
@@ -289,7 +299,7 @@ export function Chatbot() {
         ))}
         {loading && (
           <div className="flex gap-3 justify-start">
-             <Bot className="h-6 w-6 text-primary flex-shrink-0" />
+            <Bot className="h-6 w-6 text-primary flex-shrink-0" />
             <div className="p-4 rounded-lg max-w-lg bg-background border">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-[250px]" />
@@ -298,57 +308,62 @@ export function Chatbot() {
             </div>
           </div>
         )}
-         {error && (
-            <Alert variant="destructive">
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
+        {error && (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
       </div>
 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-                Ask anything about farming.
-            </p>
-            <div className="flex items-center gap-2">
-                {!loading && conversation.length > 0 && (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button onClick={handleClearHistory} variant="ghost" size="icon">
-                                    <Trash2 className="h-5 w-5" />
-                                    <span className="sr-only">Clear Chat History</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                Clear Chat History
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
-                {!loading && conversation.some(m => m.role === 'assistant') && (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button onClick={handlePlayLastResponse} variant="ghost" size="icon" disabled={isGeneratingAudio}>
-                                    {isGeneratingAudio ? (
-                                        <LoaderCircle className="h-5 w-5 animate-spin" />
-                                    ) : (
-                                        <Volume2 className="h-5 w-5" />
-                                    )}
-                                    <span className="sr-only">Play Last Response</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                Play Last Response
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
-            </div>
+          <p className="text-sm text-muted-foreground">
+            Ask anything about farming.
+          </p>
+          <div className="flex items-center gap-2">
+            {!loading && conversation.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleClearHistory}
+                      variant="ghost"
+                      size="icon"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                      <span className="sr-only">Clear Chat History</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clear Chat History</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {!loading && conversation.some((m) => m.role === 'assistant') && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handlePlayLastResponse}
+                      variant="ghost"
+                      size="icon"
+                      disabled={isGeneratingAudio}
+                    >
+                      {isGeneratingAudio ? (
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Volume2 className="h-5 w-5" />
+                      )}
+                      <span className="sr-only">Play Last Response</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Play Last Response</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </div>
-       
+
         <div className="space-y-2 mb-4">
           <Label htmlFor="language-select">Response Language</Label>
           <Select value={language} onValueChange={setLanguage}>
@@ -404,9 +419,10 @@ export function Chatbot() {
             <span className="sr-only">Send</span>
           </Button>
         </form>
-         {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" autoPlay />}
+        {audioUrl && (
+          <audio ref={audioRef} src={audioUrl} className="hidden" autoPlay />
+        )}
       </div>
     </div>
   );
 }
-

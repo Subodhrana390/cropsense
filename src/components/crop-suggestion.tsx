@@ -182,7 +182,7 @@ export function CropSuggestion() {
     setIsGeneratingAudio(true);
     const result = await getSpeechFromText(selectedCropInfo.details);
     if (result.success && result.data) {
-      setAudioUrl(result.data.media);
+      setAudioUrl(result.data);
     } else {
       toast({
         variant: 'destructive',

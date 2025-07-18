@@ -260,11 +260,11 @@ const ttsSchema = z.string().min(1, 'Text cannot be empty.');
 
 export async function getSpeechFromText(
   text: string
-): Promise<{ success: boolean; data?: TextToSpeechOutput; error?: string }> {
+): Promise<{ success: boolean; data?: { media: TextToSpeechOutput }; error?: string }> {
   try {
     const validatedText = ttsSchema.parse(text);
     const result = await textToSpeech(validatedText);
-    return { success: true, data: result };
+    return { success: true, data: { media: result } };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {

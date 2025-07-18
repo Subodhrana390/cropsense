@@ -16,14 +16,11 @@ import wav from 'wav';
 const TextToSpeechInputSchema = z.string();
 export type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
 
-const TextToSpeechOutputSchema = z.object({
-  media: z
-    .string()
-    .describe(
-      "The generated audio as a data URI. Expected format: 'data:audio/wav;base64,<encoded_data>'"
-    ),
-});
+const TextToSpeechOutputSchema = z.string().describe(
+  "The generated audio as a data URI. Expected format: 'data:audio/wav;base64,<encoded_data>'"
+);
 export type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
+
 
 export async function textToSpeech(
   input: TextToSpeechInput
@@ -85,8 +82,6 @@ const textToSpeechFlow = ai.defineFlow(
       'base64'
     );
     const wavBase64 = await toWav(audioBuffer);
-    return {
-      media: 'data:audio/wav;base64,' + wavBase64,
-    };
+    return 'data:audio/wav;base64,' + wavBase64;
   }
 );

@@ -251,8 +251,7 @@ export async function getCropIdentification(data: { photoDataUri: string }) {
     console.error('Error getting crop identification:', error);
     return {
       success: false,
-      error:
-        'The AI assistant is currently unavailable. Please try again later.',
+      error: 'Could not identify the crop from the image. Please try a different image or check the file format.',
     };
   }
 }

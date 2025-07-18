@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, ScanLine, Tag, Leaf, Sun, Bug } from 'lucide-react';
+import { DollarSign, ScanLine, Tag, Leaf, Sun, Bug, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState, useTransition } from 'react';
 import {
@@ -16,6 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 type IdentificationResult = {
   cropName: string;
@@ -29,6 +30,7 @@ export function CropIdentifier() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [result, setResult] = useState<IdentificationResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -50,6 +52,7 @@ export function CropIdentifier() {
         setImagePreview(dataUrl);
         setImageData(dataUrl);
         setResult(null);
+        setError(null);
       };
       reader.readAsDataURL(file);
     }
@@ -65,15 +68,17 @@ export function CropIdentifier() {
       return;
     }
     setResult(null);
+    setError(null);
 
     startTransition(async () => {
       const response = await getCropIdentification({ photoDataUri: imageData });
       if (response.success && response.data) {
         setResult(response.data);
       } else {
+        setError(response.error || 'An unknown error occurred.');
         toast({
           variant: 'destructive',
-          title: 'Error',
+          title: 'Identification Failed',
           description: response.error,
         });
       }
@@ -113,6 +118,14 @@ export function CropIdentifier() {
         {isPending ? 'Analyzing...' : 'Identify Crop & Estimate Price'}
         <ScanLine className="ml-2 h-4 w-4" />
       </Button>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Identification Failed</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       {isPending && (
         <div className="space-y-4 pt-4">
